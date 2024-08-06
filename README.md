@@ -6,3 +6,5 @@ To run a simulation:
 - Tweak the simulation parameters under the section `# Define constants` of the `simulation.py` script as desired.
 - Ensure the packages [pandas](https://pandas.pydata.org/) and [matplotlib](https://matplotlib.org/) are installed, and
   then run `simulation.py`.
+
+![](plot.png)
