@@ -1,5 +1,4 @@
 from random import choice, random
-from statistics import median
 
 
 class RandomPlayer:
@@ -22,7 +21,7 @@ class MainPlayer(RandomPlayer):
         if history.empty:
             return 'buy', 1.0
         current_price = history.tail(1).price_history.iloc[0]
-        median_price = median(history.price_history)
-        if current_price <= median_price:
+        mean_price = sum(history.price_history) / len(history.price_history)
+        if current_price <= mean_price:
             return 'buy', 1.0
         return 'sell', 1.0
