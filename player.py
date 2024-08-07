@@ -1,4 +1,5 @@
 from random import choice, random
+from statistics import median
 
 
 class RandomPlayer:
@@ -19,13 +20,9 @@ class MainPlayer(RandomPlayer):
 
     def implement_trading_strategy(self, history):
         if history.empty:
-            return 'buy', 1
-        else:
-            most_recent_price = history.tail(1).price_history.iloc[0]
-            lower_quantile = history.price_history.quantile(0.1)
-            upper_quantile = history.price_history.quantile(0.9)
-            if most_recent_price <= lower_quantile:
-                return 'buy', 1
-            if most_recent_price >= upper_quantile:
-                return 'sell', 1
-            return 'hold', 0
+            return 'buy', 1.0
+        current_price = history.tail(1).price_history.iloc[0]
+        median_price = median(history.price_history)
+        if current_price <= median_price:
+            return 'buy', 1.0
+        return 'sell', 1.0
