@@ -9,6 +9,11 @@ from matplotlib import ticker
 import player
 
 # Define coin constants
+#   Starting (or maximum) pool of coins X is arbitrary.
+#   Slope and intercept terms come from fitting a straight line between the following two points:
+#   (1) when there are X coins in the pool, the price should be $0.10;
+#   (2) when there are 10% of the coins left in the pool, the price should be $10.
+#   When there are 0 coins in the pool, the price will be the intercept term.
 STARTING_POOL_OF_COINS = 100000
 SLOPE = -0.00011
 INTERCEPT = 11.1
@@ -26,6 +31,12 @@ NUM_SIMULATIONS = 50
 
 # Initialise list to store results from each simulation
 results = []
+
+
+# Define function to calculate price based on pool of coins
+def calculate_price(slope, intercept, pool):
+    return round(slope * pool + intercept, 2)
+
 
 # Iterate simulations
 for simulation in range(NUM_SIMULATIONS):
@@ -54,7 +65,7 @@ for simulation in range(NUM_SIMULATIONS):
     while seconds_remaining > 0:
 
         # Calculate current price
-        current_price = round(SLOPE * pool_of_coins + INTERCEPT, 2)
+        current_price = calculate_price(SLOPE, INTERCEPT, pool_of_coins)
 
         # Randomly select player
         selected_player = choice(players)
@@ -92,8 +103,9 @@ for simulation in range(NUM_SIMULATIONS):
         minutes_remaining = seconds_remaining // 60
 
     # Store results of simulation
+    closing_price = calculate_price(SLOPE, INTERCEPT, pool_of_coins)
     for p in players:
-        p.total_assets = p.money + p.coins * current_price
+        p.total_assets = p.money + p.coins * closing_price
     results.append(players[0].total_assets)
 
 # Calculate mean of results
