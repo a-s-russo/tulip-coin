@@ -42,7 +42,6 @@ for simulation in range(NUM_SIMULATIONS):
         'price_history': [],
         'minutes_remaining': [],
     }
-    history = pandas.DataFrame(history_dict)
 
     # Initialise players
     main_player = player.MainPlayer(money=STARTING_MONEY_IN_DOLLARS)
@@ -59,7 +58,7 @@ for simulation in range(NUM_SIMULATIONS):
 
         # Randomly select player
         selected_player = choice(players)
-        trade_decision, trade_proportion = selected_player.implement_trading_strategy(history)
+        trade_decision, trade_proportion = selected_player.implement_trading_strategy(pandas.DataFrame(history_dict))
 
         # Buy coins
         if trade_decision == 'buy':
@@ -86,7 +85,6 @@ for simulation in range(NUM_SIMULATIONS):
         history_dict['transaction'].append(trade_number)
         history_dict['price_history'].append(current_price)
         history_dict['minutes_remaining'].append(minutes_remaining)
-        history = pandas.DataFrame(history_dict)
 
         # Update simulation parameters
         trade_number += 1
