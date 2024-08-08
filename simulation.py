@@ -32,9 +32,9 @@ for simulation in range(NUM_SIMULATIONS):
 
     # Initialise simulation parameters
     seconds_remaining = DURATION_IN_MINUTES * 60
+    minutes_remaining = DURATION_IN_MINUTES
     pool_of_coins = STARTING_POOL_OF_COINS
-    starting_price = round(SLOPE * pool_of_coins + INTERCEPT, 2)
-    trade_number = 0
+    trade_number = 1
 
     # Initialise dictionary and dataframe to store the history of prices in previous transactions
     history_dict = {
@@ -54,18 +54,15 @@ for simulation in range(NUM_SIMULATIONS):
     # Iterate trades
     while seconds_remaining > 0:
 
-        # Extract current price (based on pool of coins or previous transaction if pool empty)
-        if pool_of_coins > 0 or seconds_remaining == DURATION_IN_MINUTES * 60:
-            current_price = round(SLOPE * pool_of_coins + INTERCEPT, 2)
-        else:
-            current_price = history_dict['price_history'][-1]
+        # Calculate current price
+        current_price = round(SLOPE * pool_of_coins + INTERCEPT, 2)
 
         # Randomly select player
         selected_player = choice(players)
         trade_decision, trade_proportion = selected_player.implement_trading_strategy(history)
 
         # Buy coins
-        if trade_decision == 'buy' and pool_of_coins > 0:
+        if trade_decision == 'buy':
             money_to_spend = selected_player.money * trade_proportion
             coins_to_buy = min(int(money_to_spend // current_price), pool_of_coins)
             selected_player.coins += coins_to_buy
@@ -74,21 +71,27 @@ for simulation in range(NUM_SIMULATIONS):
             selected_player.money -= money_spent
 
         # Sell coins
-        if trade_decision == 'sell' and selected_player.coins > 0:
+        if trade_decision == 'sell':
             coins_to_sell = int(math.floor(selected_player.coins * trade_proportion))
             selected_player.coins -= coins_to_sell
             pool_of_coins += coins_to_sell
             money_earned = coins_to_sell * current_price
             selected_player.money += money_earned
 
+        # Do not buy or sell coins
+        if trade_decision == 'hold' and trade_number > 1:
+            current_price = history_dict['price_history'][-1]
+
         # Update history
-        trade_number += 1
-        seconds_remaining -= TRADE_GAP_IN_SECONDS
-        minutes_remaining = seconds_remaining // 60
         history_dict['transaction'].append(trade_number)
         history_dict['price_history'].append(current_price)
         history_dict['minutes_remaining'].append(minutes_remaining)
         history = pandas.DataFrame(history_dict)
+
+        # Update simulation parameters
+        trade_number += 1
+        seconds_remaining -= TRADE_GAP_IN_SECONDS
+        minutes_remaining = seconds_remaining // 60
 
     # Store results of simulation
     for p in players:
