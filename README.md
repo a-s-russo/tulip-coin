@@ -1,5 +1,9 @@
 # Simulations of the Tulip Coin coding challenge
 
+Details of the challenge are outlined below:
+
+![](coding_challenge.png)
+
 To run a suite of simulations:
 
 - Define the trading strategies in the functions `implement_trading_strategy()` in the `player.py` script for the main
