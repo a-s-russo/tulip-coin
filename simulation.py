@@ -9,14 +9,8 @@ from matplotlib import ticker
 import player
 
 # Define coin constants
-#   Starting (or maximum) pool of coins X is arbitrary.
-#   Slope and intercept terms come from fitting a straight line between the following two points:
-#   (1) when there are X coins in the pool, the price should be $0.10;
-#   (2) when there are 10% of the coins left in the pool, the price should be $10.
-#   When there are 0 coins in the pool, the price will be the intercept term.
 STARTING_POOL_OF_COINS = 100000
-SLOPE = -0.00011
-INTERCEPT = 11.1
+STARTING_PRICE_IN_DOLLARS = 0.1
 
 # Define time constants
 DURATION_IN_MINUTES = 60
@@ -34,21 +28,22 @@ results = []
 
 
 # Define function to calculate price based on pool of coins
-def calculate_price(slope, intercept, pool):
-    return round(slope * pool + intercept, 2)
+def calculate_price(pool):
+    return 50000 / ((pool / 250) ** 2.2)
 
 
 # Iterate simulations
 for simulation in range(NUM_SIMULATIONS):
 
     # Initialise simulation parameters
-    seconds_remaining = DURATION_IN_MINUTES * 60
-    minutes_remaining = DURATION_IN_MINUTES
+    first_buy_transacted = False
     pool_of_coins = STARTING_POOL_OF_COINS
     trade_number = 1
+    seconds_remaining = DURATION_IN_MINUTES * 60
+    minutes_remaining = DURATION_IN_MINUTES
 
     # Initialise dictionary and dataframe to store the history of prices in previous transactions
-    history_dict = {
+    history = {
         'transaction': [],
         'price_history': [],
         'minutes_remaining': [],
@@ -64,15 +59,22 @@ for simulation in range(NUM_SIMULATIONS):
     # Iterate trades
     while seconds_remaining > 0:
 
-        # Calculate current price
-        current_price = calculate_price(SLOPE, INTERCEPT, pool_of_coins)
+        # Calculate current price (starting price differs until first buy is transacted)
+        if not first_buy_transacted:
+            current_price = STARTING_PRICE_IN_DOLLARS
+        else:
+            try:
+                current_price = calculate_price(pool_of_coins)
+            except ZeroDivisionError:
+                current_price = history['price_history'][-1]
 
         # Randomly select player
         selected_player = choice(players)
-        trade_decision, trade_proportion = selected_player.implement_trading_strategy(pandas.DataFrame(history_dict))
+        trade_decision, trade_proportion = selected_player.implement_trading_strategy(pandas.DataFrame(history))
 
         # Buy coins
         if trade_decision == 'buy':
+            first_buy_transacted = True
             money_to_spend = selected_player.money * trade_proportion
             coins_to_buy = min(int(money_to_spend // current_price), pool_of_coins)
             selected_player.coins += coins_to_buy
@@ -90,12 +92,12 @@ for simulation in range(NUM_SIMULATIONS):
 
         # Do not buy or sell coins
         if trade_decision == 'hold' and trade_number > 1:
-            current_price = history_dict['price_history'][-1]
+            current_price = history['price_history'][-1]
 
         # Update history
-        history_dict['transaction'].append(trade_number)
-        history_dict['price_history'].append(current_price)
-        history_dict['minutes_remaining'].append(minutes_remaining)
+        history['transaction'].append(trade_number)
+        history['price_history'].append(current_price)
+        history['minutes_remaining'].append(minutes_remaining)
 
         # Update simulation parameters
         trade_number += 1
@@ -103,7 +105,10 @@ for simulation in range(NUM_SIMULATIONS):
         minutes_remaining = seconds_remaining // 60
 
     # Store results of simulation
-    closing_price = calculate_price(SLOPE, INTERCEPT, pool_of_coins)
+    try:
+        closing_price = calculate_price(pool_of_coins)
+    except ZeroDivisionError:
+        closing_price = history['price_history'][-1]
     for p in players:
         p.total_assets = p.money + p.coins * closing_price
     results.append(players[0].total_assets)
